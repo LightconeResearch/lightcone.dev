@@ -196,8 +196,6 @@ fi
 
 info "Installing packages (this may take a minute)..."
 
-export SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0
-
 "$PIP" install --quiet -e "$LIGHTCONE_DIR/ASP"          && ok "Installed asp"          || die "Failed to install asp"
 "$PIP" install --quiet -e "$LIGHTCONE_DIR/Canvas"        && ok "Installed asp-canvas"   || die "Failed to install asp-canvas"
 "$PIP" install --quiet -e "$LIGHTCONE_DIR/Prism[canvas]" && ok "Installed prism"        || die "Failed to install prism"
@@ -245,6 +243,48 @@ if [ "$VENV_MODE" = "new" ]; then
             ;;
         *)      warn "Could not detect shell. Add $BIN_DIR to your PATH manually." ;;
     esac
+fi
+
+# ---------------------------------------------------------------------------
+# VS Code extension (optional)
+# ---------------------------------------------------------------------------
+
+INSTALL_VSCODE=false
+if command -v code >/dev/null 2>&1; then
+    if [ -t 0 ]; then
+        echo ""
+        info "VS Code detected. Install the ASP Canvas extension?"
+        printf "  [Y/n]: "
+        read -r vscode_choice
+        vscode_choice="${vscode_choice:-y}"
+        case "$vscode_choice" in
+            [Yy]*) INSTALL_VSCODE=true ;;
+        esac
+    fi
+fi
+
+if $INSTALL_VSCODE; then
+    if ! command -v pnpm >/dev/null 2>&1; then
+        if command -v npm >/dev/null 2>&1; then
+            info "Installing pnpm..."
+            npm install -g pnpm --quiet 2>/dev/null && ok "Installed pnpm" || { warn "Could not install pnpm. Skipping VS Code extension."; INSTALL_VSCODE=false; }
+        else
+            warn "Node.js/npm not found. Skipping VS Code extension."
+            INSTALL_VSCODE=false
+        fi
+    fi
+fi
+
+if $INSTALL_VSCODE; then
+    info "Building VS Code extension..."
+    (
+        cd "$LIGHTCONE_DIR/Canvas"
+        pnpm install --quiet 2>/dev/null
+        pnpm build:vscode 2>/dev/null
+        cd packages/vscode-extension
+        npx --yes @vscode/vsce package --no-dependencies 2>/dev/null
+        code --install-extension asp-canvas-*.vsix 2>/dev/null
+    ) && ok "Installed ASP Canvas VS Code extension" || warn "VS Code extension build failed (you can retry manually with: cd ~/.lightcone/Canvas && pnpm build:vscode)"
 fi
 
 # ---------------------------------------------------------------------------
