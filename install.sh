@@ -5,8 +5,7 @@ set -euo pipefail
 # Usage: curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh | bash
 #   or:  bash install.sh [--ssh]
 
-LIGHTCONE_DIR="$HOME/.lightcone"
-CONFIG_FILE="$LIGHTCONE_DIR/.config"
+DEFAULT_DIR="$HOME/.lightcone"
 GITHUB_ORG="https://github.com/LightconeResearch"
 GITHUB_SSH="git@github.com:LightconeResearch"
 REPOS=(ASP Canvas Prism)
@@ -56,6 +55,24 @@ for candidate in python3 python; do
 done
 [ -n "$PYTHON" ] || die "Python >= 3.11 is required but not found."
 ok "Python $ver ($PYTHON)"
+
+# ---------------------------------------------------------------------------
+# Choose install directory
+# ---------------------------------------------------------------------------
+
+if [ -t 0 ]; then
+    echo ""
+    info "Where should Lightcone be installed?"
+    printf "  Directory [%s]: " "$DEFAULT_DIR"
+    read -r user_dir
+    LIGHTCONE_DIR="${user_dir:-$DEFAULT_DIR}"
+else
+    LIGHTCONE_DIR="$DEFAULT_DIR"
+fi
+
+# Expand ~ if present
+LIGHTCONE_DIR="${LIGHTCONE_DIR/#\~/$HOME}"
+CONFIG_FILE="$LIGHTCONE_DIR/.config"
 
 # ---------------------------------------------------------------------------
 # Clone or update repos
@@ -123,7 +140,7 @@ else
     if [ -t 0 ]; then
         echo ""
         info "Where should Lightcone packages be installed?"
-        echo "  1) Create a new venv at ~/.lightcone/.venv (default)"
+        echo "  1) Create a new venv at $LIGHTCONE_DIR/.venv (default)"
         echo "  2) Install into an existing virtual environment"
         printf "  Choice [1]: "
         read -r choice
