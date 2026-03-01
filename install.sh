@@ -215,7 +215,7 @@ info "Installing packages (this may take a minute)..."
 
 "$PIP" install --quiet -e "$LIGHTCONE_DIR/ASP"          && ok "Installed asp"          || die "Failed to install asp"
 "$PIP" install --quiet -e "$LIGHTCONE_DIR/Canvas"        && ok "Installed asp-canvas"   || die "Failed to install asp-canvas"
-"$PIP" install --quiet -e "$LIGHTCONE_DIR/Prism[canvas]" && ok "Installed prism"        || die "Failed to install prism"
+"$PIP" install --quiet -e "$LIGHTCONE_DIR/Prism" && ok "Installed prism"        || die "Failed to install prism"
 
 # ---------------------------------------------------------------------------
 # PATH setup (only for new venv)
@@ -324,5 +324,4 @@ echo "Then try:"
 echo ""
 echo "  prism --help        # See all commands"
 echo "  prism init my-proj  # Create a new project"
-echo "  prism canvas        # Open the visual canvas"
 echo ""
