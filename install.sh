@@ -11,14 +11,105 @@ GITHUB_SSH="git@github.com:LightconeResearch"
 REPOS=(ASP Canvas Prism)
 
 # ---------------------------------------------------------------------------
+# Colors & symbols
+# ---------------------------------------------------------------------------
+
+BOLD='\033[1m'
+DIM='\033[2m'
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-info()  { printf '\033[0;34m==>\033[0m %s\n' "$*"; }
-ok()    { printf '\033[0;32m  ✓\033[0m %s\n' "$*"; }
-warn()  { printf '\033[0;33m  !\033[0m %s\n' "$*"; }
-err()   { printf '\033[0;31m  ✗\033[0m %s\n' "$*" >&2; }
-die()   { err "$@"; exit 1; }
+STEP=0
+TOTAL_STEPS=4  # prerequisites, repos, venv, packages (vscode is optional/bonus)
+
+step() {
+    STEP=$((STEP + 1))
+    printf '\n%b[%d/%d]%b %b%s%b\n' "$DIM" "$STEP" "$TOTAL_STEPS" "$RESET" "$BOLD" "$*" "$RESET"
+}
+
+ok()   { printf '%b  ✓%b %s\n' "$GREEN" "$RESET" "$*"; }
+warn() { printf '%b  !%b %s\n' "$YELLOW" "$RESET" "$*"; }
+err()  { printf '%b  ✗%b %s\n' "$RED" "$RESET" "$*" >&2; }
+die()  { err "$@"; exit 1; }
+
+# ---------------------------------------------------------------------------
+# Spinner — braille dots, runs in background
+# ---------------------------------------------------------------------------
+
+SPINNER_PID=""
+SPINNER_FRAMES=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
+
+spin_start() {
+    local msg="$1"
+    (
+        i=0
+        while true; do
+            printf '\r%b  %s%b  %s' "$BLUE" "${SPINNER_FRAMES[$i]}" "$RESET" "$msg"
+            i=$(( (i + 1) % ${#SPINNER_FRAMES[@]} ))
+            sleep 0.08
+        done
+    ) &
+    SPINNER_PID=$!
+    disown 2>/dev/null || true
+}
+
+spin_stop() {
+    if [ -n "$SPINNER_PID" ]; then
+        kill "$SPINNER_PID" 2>/dev/null || true
+        wait "$SPINNER_PID" 2>/dev/null || true
+        SPINNER_PID=""
+        printf '\r\033[K'  # clear the spinner line
+    fi
+}
+
+# Clean up spinner on exit
+cleanup() { spin_stop; }
+trap cleanup EXIT
+
+# Run a command with a spinner, show ✓ on success or ✗ on failure
+# Usage: run_with_spinner "message" command arg1 arg2 ...
+run_with_spinner() {
+    local msg="$1"; shift
+    spin_start "$msg"
+    local output
+    if output=$("$@" 2>&1); then
+        spin_stop
+        ok "$msg"
+        return 0
+    else
+        local exit_code=$?
+        spin_stop
+        err "$msg"
+        # Show the captured output indented so the user can debug
+        if [ -n "$output" ]; then
+            printf '%b' "$output" | while IFS= read -r line; do
+                printf '%b    %s%b\n' "$DIM" "$line" "$RESET"
+            done
+        fi
+        return $exit_code
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Banner
+# ---------------------------------------------------------------------------
+
+printf '%b' "$BOLD"
+cat << 'BANNER'
+
+  ╦  ╦╔═╗╦ ╦╔╦╗╔═╗╔═╗╔╗╔╔═╗
+  ║  ║║ ╦╠═╣ ║ ║  ║ ║║║║║╣
+  ╩═╝╩╚═╝╩ ╩ ╩ ╚═╝╚═╝╝╚╝╚═╝
+
+BANNER
+printf '%b' "$RESET"
 
 # ---------------------------------------------------------------------------
 # Parse flags
@@ -33,10 +124,10 @@ for arg in "$@"; do
 done
 
 # ---------------------------------------------------------------------------
-# Preflight checks
+# Step 1: Preflight checks
 # ---------------------------------------------------------------------------
 
-info "Checking prerequisites..."
+step "Checking prerequisites"
 
 command -v git >/dev/null 2>&1 || die "git is required but not found. Please install git first."
 ok "git found"
@@ -61,9 +152,7 @@ ok "Python $ver ($PYTHON)"
 # ---------------------------------------------------------------------------
 
 if [ -t 0 ]; then
-    echo ""
-    info "Where should Lightcone be installed?"
-    printf "  Directory [%s]: " "$DEFAULT_DIR"
+    printf '\n  Directory [%b%s%b]: ' "$DIM" "$DEFAULT_DIR" "$RESET"
     read -r user_dir
     LIGHTCONE_DIR="${user_dir:-$DEFAULT_DIR}"
 else
@@ -75,34 +164,33 @@ LIGHTCONE_DIR="${LIGHTCONE_DIR/#\~/$HOME}"
 CONFIG_FILE="$LIGHTCONE_DIR/.config"
 
 # ---------------------------------------------------------------------------
-# Clone or update repos
+# Step 2: Clone or update repos
 # ---------------------------------------------------------------------------
 
-mkdir -p "$LIGHTCONE_DIR"
+step "Setting up repositories"
 
-info "Setting up repositories in $LIGHTCONE_DIR..."
+mkdir -p "$LIGHTCONE_DIR"
 
 for repo in "${REPOS[@]}"; do
     repo_dir="$LIGHTCONE_DIR/$repo"
     if [ -d "$repo_dir/.git" ]; then
-        info "Updating $repo..."
-        git -C "$repo_dir" pull --ff-only --quiet 2>/dev/null && ok "Updated $repo" || warn "Could not fast-forward $repo (you may have local changes)"
+        run_with_spinner "Updating $repo" git -C "$repo_dir" pull --ff-only --quiet \
+            || warn "Could not fast-forward $repo (you may have local changes)"
     else
         if $USE_SSH; then
             url="$GITHUB_SSH/$repo.git"
         else
             url="$GITHUB_ORG/$repo.git"
         fi
-        info "Cloning $repo..."
-        git clone --quiet "$url" "$repo_dir" || die "Failed to clone $repo. Do you have access to the LightconeResearch GitHub org?"
-        ok "Cloned $repo"
+        if [ -d "$repo_dir" ]; then
+            die "Directory $repo_dir exists but is not a git repository. Remove it and re-run the installer."
+        fi
+        run_with_spinner "Cloning $repo" git clone --quiet "$url" "$repo_dir" \
+            || die "Failed to clone $repo. Do you have access to the LightconeResearch GitHub org?"
     fi
 done
 
-# ---------------------------------------------------------------------------
-# Set up Prism extern/ASP symlink
-# ---------------------------------------------------------------------------
-
+# Prism extern/ASP symlink
 prism_extern="$LIGHTCONE_DIR/Prism/extern"
 mkdir -p "$prism_extern"
 if [ ! -L "$prism_extern/ASP" ]; then
@@ -111,8 +199,10 @@ if [ ! -L "$prism_extern/ASP" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Virtual environment selection
+# Step 3: Virtual environment
 # ---------------------------------------------------------------------------
+
+step "Configuring Python environment"
 
 load_config() {
     if [ -f "$CONFIG_FILE" ]; then
@@ -134,19 +224,16 @@ VENV_PATH=""
 load_config
 
 if [ -n "$VENV_MODE" ] && [ -n "$VENV_PATH" ]; then
-    info "Using previously configured venv: $VENV_PATH"
+    ok "Using existing venv: $VENV_PATH"
 else
-    # Interactive prompt (only when stdin is a terminal)
     if [ -t 0 ]; then
         echo ""
-        info "Where should Lightcone packages be installed?"
         echo "  1) Create a new venv at $LIGHTCONE_DIR/.venv (default)"
         echo "  2) Install into an existing virtual environment"
-        printf "  Choice [1]: "
+        printf '  Choice [1]: '
         read -r choice
         choice="${choice:-1}"
     else
-        # Non-interactive (piped) — use default
         choice="1"
     fi
 
@@ -176,7 +263,6 @@ else
                 read -r VENV_PATH
             fi
             VENV_MODE="existing"
-            # Expand ~ if present
             VENV_PATH="${VENV_PATH/#\~/$HOME}"
             [ -f "$VENV_PATH/bin/python" ] || [ -f "$VENV_PATH/Scripts/python.exe" ] || die "No valid venv found at $VENV_PATH"
             ;;
@@ -188,17 +274,11 @@ else
     save_config
 fi
 
-# ---------------------------------------------------------------------------
-# Create venv if needed
-# ---------------------------------------------------------------------------
-
 if [ "$VENV_MODE" = "new" ] && [ ! -d "$VENV_PATH" ]; then
-    info "Creating virtual environment at $VENV_PATH..."
-    "$PYTHON" -m venv "$VENV_PATH"
-    ok "Created venv"
+    run_with_spinner "Creating virtual environment" "$PYTHON" -m venv "$VENV_PATH"
 fi
 
-# Determine pip/python paths
+# Determine pip path
 if [ -f "$VENV_PATH/bin/pip" ]; then
     PIP="$VENV_PATH/bin/pip"
 elif [ -f "$VENV_PATH/Scripts/pip.exe" ]; then
@@ -207,15 +287,17 @@ else
     die "Cannot find pip in $VENV_PATH"
 fi
 
+ok "Virtual environment ready"
+
 # ---------------------------------------------------------------------------
-# Install packages in dependency order
+# Step 4: Install packages
 # ---------------------------------------------------------------------------
 
-info "Installing packages (this may take a minute)..."
+step "Installing packages"
 
-"$PIP" install --quiet -e "$LIGHTCONE_DIR/ASP"          && ok "Installed asp"          || die "Failed to install asp"
-"$PIP" install --quiet -e "$LIGHTCONE_DIR/Canvas"        && ok "Installed asp-canvas"   || die "Failed to install asp-canvas"
-"$PIP" install --quiet -e "$LIGHTCONE_DIR/Prism" && ok "Installed prism"        || die "Failed to install prism"
+run_with_spinner "Installing asp"        "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/ASP"          || die "Failed to install asp"
+run_with_spinner "Installing asp-canvas" "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Canvas"       || die "Failed to install asp-canvas"
+run_with_spinner "Installing prism"      "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Prism" || die "Failed to install prism"
 
 # ---------------------------------------------------------------------------
 # PATH setup (only for new venv)
@@ -231,20 +313,18 @@ add_to_path() {
 
     local marker='# Added by Lightcone installer'
     if grep -qF "$marker" "$rc_file" 2>/dev/null; then
-        return  # Already added
+        return
     fi
 
     printf '\n%s\nexport PATH="%s:$PATH"\n' "$marker" "$bin_dir" >> "$rc_file"
-    ok "Added $bin_dir to PATH in $(basename "$rc_file")"
+    ok "Added to PATH in $(basename "$rc_file")"
 }
 
 if [ "$VENV_MODE" = "new" ]; then
     BIN_DIR="$VENV_PATH/bin"
-    # Detect shell rc file
     case "${SHELL:-/bin/bash}" in
         */zsh)  add_to_path "$BIN_DIR" "$HOME/.zshrc" ;;
         */bash)
-            # macOS uses .bash_profile, Linux uses .bashrc
             if [ -f "$HOME/.bash_profile" ]; then
                 add_to_path "$BIN_DIR" "$HOME/.bash_profile"
             else
@@ -255,7 +335,7 @@ if [ "$VENV_MODE" = "new" ]; then
             fish_conf="$HOME/.config/fish/config.fish"
             if [ -f "$fish_conf" ] && ! grep -qF "lightcone" "$fish_conf" 2>/dev/null; then
                 printf '\n# Added by Lightcone installer\nfish_add_path %s\n' "$BIN_DIR" >> "$fish_conf"
-                ok "Added $BIN_DIR to PATH in config.fish"
+                ok "Added to PATH in config.fish"
             fi
             ;;
         *)      warn "Could not detect shell. Add $BIN_DIR to your PATH manually." ;;
@@ -266,42 +346,25 @@ fi
 # VS Code extension (optional)
 # ---------------------------------------------------------------------------
 
-INSTALL_VSCODE=false
-if command -v code >/dev/null 2>&1; then
+VSIX_PATH="$LIGHTCONE_DIR/Canvas/vsix/asp-canvas.vsix"
+
+if command -v code >/dev/null 2>&1 && [ -f "$VSIX_PATH" ]; then
     if [ -t 0 ]; then
         echo ""
-        info "VS Code detected. Install the ASP Canvas extension?"
-        printf "  [Y/n]: "
+        printf '  VS Code detected. Install the ASP Canvas extension? [Y/n]: '
         read -r vscode_choice
         vscode_choice="${vscode_choice:-y}"
         case "$vscode_choice" in
-            [Yy]*) INSTALL_VSCODE=true ;;
+            [Yy]*) run_with_spinner "Installing VS Code extension" code --install-extension "$VSIX_PATH" --force \
+                       || warn "VS Code extension install failed. You can retry: code --install-extension $VSIX_PATH" ;;
         esac
+    else
+        # Non-interactive with VS Code available — install automatically
+        run_with_spinner "Installing VS Code extension" code --install-extension "$VSIX_PATH" --force \
+            || warn "VS Code extension install failed."
     fi
-fi
-
-if $INSTALL_VSCODE; then
-    if ! command -v pnpm >/dev/null 2>&1; then
-        if command -v npm >/dev/null 2>&1; then
-            info "Installing pnpm..."
-            npm install -g pnpm --quiet 2>/dev/null && ok "Installed pnpm" || { warn "Could not install pnpm. Skipping VS Code extension."; INSTALL_VSCODE=false; }
-        else
-            warn "Node.js/npm not found. Skipping VS Code extension."
-            INSTALL_VSCODE=false
-        fi
-    fi
-fi
-
-if $INSTALL_VSCODE; then
-    info "Building VS Code extension..."
-    (
-        cd "$LIGHTCONE_DIR/Canvas"
-        pnpm install --quiet 2>/dev/null
-        pnpm build:vscode 2>/dev/null
-        cd packages/vscode-extension
-        npx --yes @vscode/vsce package --no-dependencies 2>/dev/null
-        code --install-extension asp-canvas-*.vsix 2>/dev/null
-    ) && ok "Installed ASP Canvas VS Code extension" || warn "VS Code extension build failed (you can retry manually with: cd ~/.lightcone/Canvas && pnpm build:vscode)"
+elif command -v code >/dev/null 2>&1; then
+    warn "VS Code extension not found at $VSIX_PATH (run the installer again after the next release)"
 fi
 
 # ---------------------------------------------------------------------------
@@ -309,19 +372,24 @@ fi
 # ---------------------------------------------------------------------------
 
 echo ""
-printf '\033[0;32m%s\033[0m\n' "Lightcone tools installed successfully!"
+printf '%b' "$GREEN$BOLD"
+cat << 'DONE'
+  ┌────────────────────────────────────────┐
+  │  Lightcone installed successfully! 🔭  │
+  └────────────────────────────────────────┘
+DONE
+printf '%b' "$RESET"
 echo ""
 
 if [ "$VENV_MODE" = "new" ]; then
     BIN_DIR="$VENV_PATH/bin"
-    echo "To get started, either restart your shell or run:"
-    echo ""
-    echo "  export PATH=\"$BIN_DIR:\$PATH\""
+    echo "  Restart your shell, or run:"
+    printf '  %b$ export PATH="%s:$PATH"%b\n' "$DIM" "$BIN_DIR" "$RESET"
     echo ""
 fi
 
-echo "Then try:"
-echo ""
-echo "  prism --help        # See all commands"
-echo "  prism init my-proj  # Create a new project"
+echo "  Then try:"
+printf '  %b$ prism --help%b        # See all commands\n' "$DIM" "$RESET"
+printf '  %b$ prism init my-proj%b  # Create a new project\n' "$DIM" "$RESET"
+printf '  %b$ prism canvas%b        # Open the visual canvas\n' "$DIM" "$RESET"
 echo ""
