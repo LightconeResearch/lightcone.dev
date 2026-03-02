@@ -346,7 +346,7 @@ fi
 # VS Code extension (optional)
 # ---------------------------------------------------------------------------
 
-VSIX_PATH="$LIGHTCONE_DIR/Canvas/vsix/asp-canvas.vsix"
+VSIX_PATH="$LIGHTCONE_DIR/Canvas/dist/vsix/asp-canvas-latest.vsix"
 
 if command -v code >/dev/null 2>&1 && [ -f "$VSIX_PATH" ]; then
     if [ -t 0 ]; then
