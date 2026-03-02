@@ -4,24 +4,298 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lightcone Research</title>
+<meta name="description" content="Structured analytical tools for systematic research">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-  .wrap { text-align: center; }
-  h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; }
-  .box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem 1.25rem; display: inline-flex; align-items: center; gap: 0.75rem; }
-  code { font-family: "SF Mono", "Fira Code", Menlo, monospace; font-size: 0.85rem; color: #3fb950; }
-  button { background: transparent; border: 1px solid #30363d; border-radius: 6px; color: #8b949e; cursor: pointer; padding: 0.4rem 0.7rem; font-size: 0.8rem; }
-  button:hover { color: #e6edf3; border-color: #8b949e; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:          oklch(0.16 0.01 260);
+    --bg-elevated: oklch(0.2 0.01 260);
+    --fg:          oklch(0.93 0 0);
+    --fg-muted:    oklch(0.65 0 0);
+    --fg-dim:      oklch(0.45 0 0);
+    --border:      oklch(1 0 0 / 12%);
+    --border-hover:oklch(1 0 0 / 22%);
+    --accent-blue: oklch(0.65 0.15 250);
+    --accent-green:oklch(0.6 0.12 155);
+    --accent-amber:oklch(0.7 0.12 55);
+    --radius:      0.625rem;
+  }
+
+  html { height: 100%; }
+
+  body {
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Subtle dot grid — nods to the Canvas graph background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(oklch(1 0 0 / 6%) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+
+  /* Centered glow — draws focus to content */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    width: 600px;
+    height: 400px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(ellipse, oklch(0.25 0.03 250 / 50%) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 620px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.75rem;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    animation: rise 0.7s ease-out both;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+
+  /* ---- Install ---- */
+  .install {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    animation: rise 0.7s ease-out 0.1s both;
+  }
+
+  .install-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-dim);
+    padding-left: 0.125rem;
+  }
+
+  .install-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: border-color 0.25s ease;
+  }
+
+  .install-card:hover {
+    border-color: var(--border-hover);
+  }
+
+  .install-card code {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--fg);
+    line-height: 1.6;
+    white-space: nowrap;
+    overflow-x: auto;
+    flex: 1;
+    min-width: 0;
+    scrollbar-width: none;
+  }
+
+  .install-card code::-webkit-scrollbar { display: none; }
+
+  /* ---- Copy button ---- */
+  .copy-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    color: var(--fg-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.35rem 0.65rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    line-height: 1;
+  }
+
+  .copy-btn:hover {
+    color: var(--fg);
+    border-color: var(--border-hover);
+    background: oklch(1 0 0 / 5%);
+  }
+
+  .copy-btn:active { transform: scale(0.97); }
+
+  .copy-btn.is-copied {
+    color: var(--accent-green);
+    border-color: oklch(0.6 0.12 155 / 25%);
+  }
+
+  .copy-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ---- Tools row ---- */
+  .tools {
+    display: flex;
+    gap: 0.5rem;
+    animation: rise 0.7s ease-out 0.2s both;
+  }
+
+  .tool {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: border-color 0.25s, background 0.25s;
+    cursor: default;
+  }
+
+  .tool:hover {
+    border-color: var(--border);
+    background: oklch(1 0 0 / 3%);
+  }
+
+  .tool-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .tool-dot.blue  { background: var(--accent-blue);  }
+  .tool-dot.green { background: var(--accent-green); }
+  .tool-dot.amber { background: var(--accent-amber); }
+
+  .tool-name {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--fg);
+  }
+
+  /* ---- Animation ---- */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 540px) {
+    body { padding: 2.5rem 1.25rem; }
+
+    h1 { font-size: 1.35rem; }
+
+    .tools { flex-direction: column; gap: 0.25rem; width: 100%; }
+    .tool { width: 100%; }
+
+    .install-card code { font-size: 0.7rem; }
+
+    body::after { width: 360px; height: 280px; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Lightcone Research</h1>
-  <div class="box">
-    <code id="cmd">bash &lt;(curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh)</code>
-    <button onclick="navigator.clipboard.writeText(document.getElementById('cmd').textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button>
-  </div>
+<div class="page">
+
+  <header class="header">
+    <h1>Lightcone Research</h1>
+  </header>
+
+  <section class="install">
+    <span class="install-label">Install</span>
+    <div class="install-card">
+      <code id="cmd">bash &lt;(curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh)</code>
+      <button class="copy-btn" id="copyBtn" onclick="copyCmd()">
+        <svg id="copyIcon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        <span id="copyLabel">Copy</span>
+      </button>
+    </div>
+  </section>
+
+  <nav class="tools">
+    <div class="tool">
+      <span class="tool-dot blue"></span>
+      <span class="tool-name">ASP</span>
+    </div>
+    <div class="tool">
+      <span class="tool-dot green"></span>
+      <span class="tool-name">Canvas</span>
+    </div>
+    <div class="tool">
+      <span class="tool-dot amber"></span>
+      <span class="tool-name">Prism</span>
+    </div>
+  </nav>
+
 </div>
+<script>
+function copyCmd() {
+  var btn = document.getElementById('copyBtn');
+  var label = document.getElementById('copyLabel');
+  var icon = document.getElementById('copyIcon');
+  navigator.clipboard.writeText(document.getElementById('cmd').textContent).then(function () {
+    btn.classList.add('is-copied');
+    label.textContent = 'Copied';
+    icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+    setTimeout(function () {
+      btn.classList.remove('is-copied');
+      label.textContent = 'Copy';
+      icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>';
+    }, 2000);
+  });
+}
+</script>
 </body>
 </html>
