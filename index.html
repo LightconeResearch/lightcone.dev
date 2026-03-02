@@ -19,7 +19,7 @@
 <div class="wrap">
   <h1>Lightcone Research</h1>
   <div class="box">
-    <code id="cmd">curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh | bash</code>
+    <code id="cmd">bash &lt;(curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh)</code>
     <button onclick="navigator.clipboard.writeText(document.getElementById('cmd').textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button>
   </div>
 </div>
