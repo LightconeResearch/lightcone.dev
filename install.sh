@@ -8,7 +8,7 @@ set -euo pipefail
 DEFAULT_DIR="$HOME/.lightcone"
 GITHUB_ORG="https://github.com/LightconeResearch"
 GITHUB_SSH="git@github.com:LightconeResearch"
-REPOS=(ASP Canvas Prism)
+REPOS=(ASTRA Canvas Prism)
 
 # ---------------------------------------------------------------------------
 # Colors & symbols
@@ -201,12 +201,12 @@ for repo in "${REPOS[@]}"; do
     fi
 done
 
-# Prism extern/ASP symlink
+# Prism extern/ASTRA symlink
 prism_extern="$LIGHTCONE_DIR/Prism/extern"
 mkdir -p "$prism_extern"
-if [ ! -L "$prism_extern/ASP" ]; then
-    ln -sf "$LIGHTCONE_DIR/ASP" "$prism_extern/ASP"
-    ok "Linked Prism/extern/ASP"
+if [ ! -L "$prism_extern/ASTRA" ]; then
+    ln -sf "$LIGHTCONE_DIR/ASTRA" "$prism_extern/ASTRA"
+    ok "Linked Prism/extern/ASTRA"
 fi
 
 # ---------------------------------------------------------------------------
@@ -306,8 +306,8 @@ ok "Virtual environment ready"
 
 step "Installing packages"
 
-run_with_spinner "Installing asp"        "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/ASP"          || die "Failed to install asp"
-run_with_spinner "Installing asp-canvas" "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Canvas"       || die "Failed to install asp-canvas"
+run_with_spinner "Installing astra"        "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/ASTRA"          || die "Failed to install astra"
+run_with_spinner "Installing astra-canvas" "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Canvas"       || die "Failed to install astra-canvas"
 run_with_spinner "Installing prism"      "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Prism" || die "Failed to install prism"
 
 # ---------------------------------------------------------------------------
@@ -357,12 +357,12 @@ fi
 # VS Code extension (optional)
 # ---------------------------------------------------------------------------
 
-VSIX_PATH="$LIGHTCONE_DIR/Canvas/dist/vsix/asp-canvas-latest.vsix"
+VSIX_PATH="$LIGHTCONE_DIR/Canvas/dist/vsix/astra-canvas-latest.vsix"
 
 if command -v code >/dev/null 2>&1 && [ -f "$VSIX_PATH" ]; then
     if [ -t 0 ]; then
         echo ""
-        printf '  VS Code detected. Install the ASP Canvas extension? [Y/n]: '
+        printf '  VS Code detected. Install the ASTRA Canvas extension? [Y/n]: '
         read -r vscode_choice
         vscode_choice="${vscode_choice:-y}"
         case "$vscode_choice" in
