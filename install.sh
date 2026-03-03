@@ -147,6 +147,17 @@ done
 [ -n "$PYTHON" ] || die "Python >= 3.11 is required but not found."
 ok "Python $ver ($PYTHON)"
 
+if command -v gh >/dev/null 2>&1; then
+    if gh auth status >/dev/null 2>&1; then
+        ok "GitHub CLI authenticated"
+    else
+        warn "GitHub CLI found but not authenticated — run 'gh auth login' to enable /prism-feedback"
+    fi
+else
+    warn "GitHub CLI (gh) not found — /prism-feedback won't work without it"
+    warn "Install: https://cli.github.com"
+fi
+
 # ---------------------------------------------------------------------------
 # Choose install directory
 # ---------------------------------------------------------------------------
