@@ -8,7 +8,7 @@ set -euo pipefail
 DEFAULT_DIR="$HOME/.lightcone"
 GITHUB_ORG="https://github.com/LightconeResearch"
 GITHUB_SSH="git@github.com:LightconeResearch"
-REPOS=(ASTRA Canvas Prism)
+REPOS=(ASTRA Prism-UI Prism)
 
 # ---------------------------------------------------------------------------
 # Colors & symbols
@@ -307,7 +307,7 @@ ok "Virtual environment ready"
 step "Installing packages"
 
 run_with_spinner "Installing astra"        "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/ASTRA"          || die "Failed to install astra"
-run_with_spinner "Installing astra-canvas" "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Canvas"       || die "Failed to install astra-canvas"
+run_with_spinner "Installing prism-ui"     "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Prism-UI"     || die "Failed to install prism-ui"
 run_with_spinner "Installing prism"      "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Prism" || die "Failed to install prism"
 
 # ---------------------------------------------------------------------------
@@ -357,12 +357,12 @@ fi
 # VS Code extension (optional)
 # ---------------------------------------------------------------------------
 
-VSIX_PATH="$LIGHTCONE_DIR/Canvas/dist/vsix/astra-canvas-latest.vsix"
+VSIX_PATH="$LIGHTCONE_DIR/Prism-UI/dist/vsix/prism-ui-latest.vsix"
 
 if command -v code >/dev/null 2>&1 && [ -f "$VSIX_PATH" ]; then
     if [ -t 0 ]; then
         echo ""
-        printf '  VS Code detected. Install the ASTRA Canvas extension? [Y/n]: '
+        printf '  VS Code detected. Install the Prism-UI extension? [Y/n]: '
         read -r vscode_choice
         vscode_choice="${vscode_choice:-y}"
         case "$vscode_choice" in
@@ -402,5 +402,5 @@ fi
 echo "  Then try:"
 printf '  %b$ prism --help%b        # See all commands\n' "$DIM" "$RESET"
 printf '  %b$ prism init my-proj%b  # Create a new project\n' "$DIM" "$RESET"
-printf '  %b$ prism canvas%b        # Open the visual canvas\n' "$DIM" "$RESET"
+printf '  %b$ prism ui%b             # Open the visual canvas\n' "$DIM" "$RESET"
 echo ""
