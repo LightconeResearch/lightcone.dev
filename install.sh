@@ -307,7 +307,6 @@ ok "Virtual environment ready"
 step "Installing packages"
 
 run_with_spinner "Installing astra"        "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/ASTRA"          || die "Failed to install astra"
-run_with_spinner "Installing prism-ui"     "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Prism-UI"     || die "Failed to install prism-ui"
 run_with_spinner "Installing prism"      "$PIP" install --quiet --disable-pip-version-check -e "$LIGHTCONE_DIR/Prism" || die "Failed to install prism"
 
 # ---------------------------------------------------------------------------
