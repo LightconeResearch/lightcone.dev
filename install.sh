@@ -375,6 +375,13 @@ if command -v code >/dev/null 2>&1 && [ -f "$VSIX_PATH" ]; then
     fi
 elif command -v code >/dev/null 2>&1; then
     warn "VS Code extension not found at $VSIX_PATH (run the installer again after the next release)"
+else
+    warn "VS Code 'code' command not found on PATH."
+    warn "To install the Prism-UI extension manually:"
+    warn "  1. Open VS Code and press Cmd+Shift+P (or Ctrl+Shift+P)"
+    warn "  2. Run: Shell Command: Install 'code' command in PATH"
+    warn "  3. Restart your terminal, then run:"
+    warn "     code --install-extension $VSIX_PATH --force"
 fi
 
 # ---------------------------------------------------------------------------
