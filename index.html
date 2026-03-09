@@ -7,7 +7,7 @@
 <meta name="description" content="Structured analytical tools for systematic research">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -42,6 +42,7 @@
 
     --shadow-sm: 0 1px 2px oklch(0.20 0.02 260 / 0.04), 0 1px 3px oklch(0.20 0.02 260 / 0.06);
     --shadow-md: 0 4px 12px oklch(0.20 0.02 260 / 0.06), 0 1px 4px oklch(0.20 0.02 260 / 0.04);
+    --shadow-lg: 0 12px 40px oklch(0.20 0.02 260 / 0.10), 0 4px 12px oklch(0.20 0.02 260 / 0.06);
   }
 
   /* ─── Dark Theme ─── */
@@ -72,6 +73,7 @@
 
     --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.15), 0 1px 3px oklch(0 0 0 / 0.20);
     --shadow-md: 0 4px 12px oklch(0 0 0 / 0.20), 0 1px 4px oklch(0 0 0 / 0.15);
+    --shadow-lg: 0 12px 40px oklch(0 0 0 / 0.30), 0 4px 12px oklch(0 0 0 / 0.20);
   }
 
   html { height: 100%; }
@@ -82,54 +84,89 @@
     color: var(--text-primary);
     min-height: 100%;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem 1.5rem;
+    padding: 2rem 1.5rem;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    position: relative;
   }
 
-  .page {
-    position: relative;
-    z-index: 1;
-    max-width: 620px;
+  /* ─── Panel (the main card) ─── */
+  .panel {
+    max-width: 680px;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: rise 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
-  /* ---- Theme toggle ---- */
+  /* ─── Strip (top header bar, like AnalysisStrip) ─── */
+  .strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--border-faint);
+  }
+
+  .strip-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    color: var(--text-tertiary);
+  }
+
+  .logo-mark svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+
+  .strip-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .strip-name span {
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+
+  /* ─── Theme toggle ─── */
   .theme-toggle {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    background: var(--bg-surface);
+    width: 30px;
+    height: 30px;
+    background: transparent;
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-sm);
+    border-radius: 8px;
     cursor: pointer;
-    color: var(--text-secondary);
-    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    color: var(--text-tertiary);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
   }
 
   .theme-toggle:hover {
-    border-color: var(--blue-border);
     color: var(--text-primary);
+    background: var(--bg-surface-hover);
   }
 
   .theme-toggle svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     stroke: currentColor;
     fill: none;
     stroke-width: 2;
@@ -142,84 +179,57 @@
   [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
   [data-theme="dark"] .theme-toggle .icon-sun  { display: block; }
 
-  /* ---- Header ---- */
-  .header {
-    text-align: center;
+  /* ─── Panel body ─── */
+  .panel-body {
+    padding: 20px;
     display: flex;
     flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ─── StackGroup pattern ─── */
+  .stack {
+    border: 1px solid var(--border-faint);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stack-header {
+    display: flex;
     align-items: center;
-    gap: 0.75rem;
-    animation: rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-left: 3px solid var(--border-subtle);
+    background: var(--bg-elevated);
   }
 
-  .logo-mark {
-    width: 32px;
-    height: 32px;
-    color: var(--text-tertiary);
-  }
-
-  .logo-mark svg {
-    width: 100%;
-    height: 100%;
-    fill: currentColor;
-  }
-
-  h1 {
-    font-size: 1.6rem;
-    font-weight: 300;
-    letter-spacing: 0.04em;
-    line-height: 1.2;
-    color: var(--text-primary);
-  }
-
-  h1 strong {
-    font-weight: 600;
-  }
-
-
-  /* ---- Install section ---- */
-  .install {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
-    animation: rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both;
-  }
-
-  .install-label {
-    font-size: 0.65rem;
+  .stack-header-title {
+    font-size: 0.68rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--orange-text);
-    padding: 10px 16px;
-    border-left: 3px solid var(--orange-border);
-    background: var(--orange-bg);
-    border-radius: var(--radius) var(--radius) 0 0;
   }
 
-  .install-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-top: none;
-    border-radius: 0 0 var(--radius) var(--radius);
-    padding: 14px 16px;
+  .stack-header.orange { border-left-color: var(--orange-border); background: var(--orange-bg); }
+  .stack-header.orange .stack-header-title { color: var(--orange-text); }
+
+  .stack-header.blue { border-left-color: var(--blue-border); background: var(--blue-bg); }
+  .stack-header.blue .stack-header-title { color: var(--blue-text); }
+
+  /* ─── Install card (inside stack) ─── */
+  .install-row {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    box-shadow: var(--shadow-sm);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    padding: 12px 14px;
+    background: var(--bg-deep);
   }
 
-  .install-card:hover {
-    box-shadow: var(--shadow-md);
-  }
-
-  .install-card code {
+  .install-row code {
     font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 0.78rem;
-    color: var(--text-primary);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
     line-height: 1.6;
     white-space: nowrap;
     overflow-x: auto;
@@ -228,44 +238,43 @@
     scrollbar-width: none;
   }
 
-  .install-card code::-webkit-scrollbar { display: none; }
+  .install-row code::-webkit-scrollbar { display: none; }
 
-  /* ---- Copy button ---- */
+  /* ─── Copy button ─── */
   .copy-btn {
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
+    gap: 0.3rem;
+    background: transparent;
+    border: none;
+    color: var(--orange-text);
     font-family: inherit;
-    font-size: 0.72rem;
+    font-size: 0.62rem;
     font-weight: 600;
-    padding: 5px 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 0;
     cursor: pointer;
-    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    transition: color 0.15s, opacity 0.15s;
     line-height: 1;
+    opacity: 0.7;
   }
 
   .copy-btn:hover {
-    color: var(--text-primary);
-    border-color: var(--blue-border);
-    background: var(--bg-surface-hover);
+    opacity: 1;
   }
 
   .copy-btn:active { transform: scale(0.97); }
 
   .copy-btn.is-copied {
     color: var(--green-text);
-    border-color: var(--green-border);
-    background: var(--green-bg);
+    opacity: 1;
   }
 
   .copy-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     stroke: currentColor;
     fill: none;
     stroke-width: 2;
@@ -273,118 +282,118 @@
     stroke-linejoin: round;
   }
 
-  /* ---- Tools row ---- */
-  .tools {
-    display: flex;
-    gap: 0.5rem;
-    animation: rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.16s both;
-  }
-
-  .tool {
+  /* ─── Tools footer ─── */
+  .panel-footer {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 8px 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-faint);
-    border-left: 3px solid var(--border-subtle);
-    background: var(--bg-surface);
-    box-shadow: var(--shadow-sm);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    cursor: default;
+    gap: 14px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-faint);
   }
 
-  .tool:hover {
-    box-shadow: var(--shadow-md);
+  .footer-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-tertiary);
+    margin-right: 2px;
   }
 
-  .tool.blue {
-    border-left-color: var(--blue-border);
-    background: var(--blue-bg);
+  .tool-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
-  .tool.blue .tool-name { color: var(--blue-text); }
 
-  .tool.green {
-    border-left-color: var(--green-border);
-    background: var(--green-bg);
+  .tool-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
-  .tool.green .tool-name { color: var(--green-text); }
 
-  .tool.amber {
-    border-left-color: var(--gold-border);
-    background: var(--gold-bg);
-  }
-  .tool.amber .tool-name { color: var(--gold-text); }
+  .tool-dot.blue  { background: var(--blue-border); }
+  .tool-dot.green { background: var(--green-border); }
+  .tool-dot.amber { background: var(--gold-border); }
 
   .tool-name {
     font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    letter-spacing: 0.01em;
   }
 
-  /* ---- Animation ---- */
+  /* ─── Animation ─── */
   @keyframes rise {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: scale(0.97) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
   }
 
-  /* ---- Responsive ---- */
+  /* ─── Responsive ─── */
   @media (max-width: 540px) {
-    body { padding: 2.5rem 1.25rem; }
-
-    h1 { font-size: 1.4rem; }
-
-    .tools { flex-direction: column; gap: 0.35rem; width: 100%; }
-    .tool { width: 100%; }
-
-    .install-card code { font-size: 0.7rem; }
+    body { padding: 1rem; }
+    .panel { border-radius: 12px; }
+    .strip { padding: 14px 16px 12px; }
+    .strip-name { font-size: 0.95rem; }
+    .panel-body { padding: 12px; gap: 10px; }
+    .install-row code { font-size: 0.68rem; }
   }
 </style>
 </head>
 <body>
 
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-  <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-  <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-</button>
-
-<div class="page">
-
-  <header class="header">
-    <div class="logo-mark">
-      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 16 L6 4 L26 4 Z" opacity="0.7"/>
-        <path d="M16 16 L6 28 L26 28 Z" opacity="0.35"/>
-      </svg>
+<div class="panel">
+  <div class="strip">
+    <div class="strip-left">
+      <div class="logo-mark">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 14 L7 3 L25 3 Z" opacity="0.8"/>
+          <path d="M16 18 L7 29 L25 29 Z" opacity="0.35"/>
+        </svg>
+      </div>
+      <div class="strip-name">Lightcone <span>Research</span></div>
     </div>
-    <h1><strong>Lightcone</strong> Research</h1>
-  </header>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
 
-  <section class="install">
-    <span class="install-label">Install</span>
-    <div class="install-card">
-      <code id="cmd">bash &lt;(curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh)</code>
-      <button class="copy-btn" id="copyBtn" onclick="copyCmd()">
-        <svg id="copyIcon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-        <span id="copyLabel">Copy</span>
-      </button>
+  <div class="panel-body">
+    <div class="stack">
+      <div class="stack-header orange">
+        <span class="stack-header-title">Install</span>
+        <button class="copy-btn" id="copyBtn" onclick="copyCmd()">
+          <svg id="copyIcon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span id="copyLabel">Copy</span>
+        </button>
+      </div>
+      <div class="install-row">
+        <code id="cmd">bash &lt;(curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh)</code>
+      </div>
     </div>
-  </section>
 
-  <nav class="tools">
-    <div class="tool blue">
+  </div>
+
+  <div class="panel-footer">
+    <span class="footer-label">Tools</span>
+    <div class="tool-pill">
+      <span class="tool-dot blue"></span>
       <span class="tool-name">ASTRA</span>
     </div>
-    <div class="tool green">
+    <div class="tool-pill">
+      <span class="tool-dot green"></span>
       <span class="tool-name">Prism-UI</span>
     </div>
-    <div class="tool amber">
+    <div class="tool-pill">
+      <span class="tool-dot amber"></span>
       <span class="tool-name">Prism</span>
     </div>
-  </nav>
-
+  </div>
 </div>
+
 <script>
 function copyCmd() {
   var btn = document.getElementById('copyBtn');
@@ -414,7 +423,6 @@ function toggleTheme() {
   }
 }
 
-// Restore saved theme
 (function () {
   if (localStorage.getItem('theme') === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
