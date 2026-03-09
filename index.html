@@ -11,26 +11,75 @@
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+  /* ─── Light Theme (default) ─── */
   :root {
-    --bg:          oklch(0.16 0.01 260);
-    --bg-elevated: oklch(0.2 0.01 260);
-    --fg:          oklch(0.93 0 0);
-    --fg-muted:    oklch(0.65 0 0);
-    --fg-dim:      oklch(0.45 0 0);
-    --border:      oklch(1 0 0 / 12%);
-    --border-hover:oklch(1 0 0 / 22%);
-    --accent-blue: oklch(0.65 0.15 250);
-    --accent-green:oklch(0.6 0.12 155);
-    --accent-amber:oklch(0.7 0.12 55);
-    --radius:      0.625rem;
+    --bg-deep:          oklch(0.965 0.004 260);
+    --bg-surface:       oklch(0.993 0.002 260);
+    --bg-surface-hover: oklch(0.955 0.006 260);
+    --bg-elevated:      oklch(0.975 0.003 260);
+    --border-subtle:    oklch(0.88 0.008 260);
+    --border-faint:     oklch(0.92 0.005 260);
+
+    --text-primary:     oklch(0.18 0.02 260);
+    --text-secondary:   oklch(0.42 0.015 260);
+    --text-tertiary:    oklch(0.55 0.01 260);
+
+    --blue-border:   oklch(0.62 0.12 250);
+    --blue-text:     oklch(0.40 0.12 250);
+    --blue-bg:       oklch(0.97 0.010 250);
+    --green-border:  oklch(0.58 0.14 155);
+    --green-text:    oklch(0.38 0.12 155);
+    --green-bg:      oklch(0.97 0.010 155);
+    --gold-border:   oklch(0.68 0.12 70);
+    --gold-text:     oklch(0.40 0.10 65);
+    --gold-bg:       oklch(0.97 0.012 75);
+    --orange-border: oklch(0.65 0.14 45);
+    --orange-text:   oklch(0.42 0.12 40);
+    --orange-bg:     oklch(0.97 0.010 50);
+
+    --radius:    10px;
+    --radius-sm: 7px;
+
+    --shadow-sm: 0 1px 2px oklch(0.20 0.02 260 / 0.04), 0 1px 3px oklch(0.20 0.02 260 / 0.06);
+    --shadow-md: 0 4px 12px oklch(0.20 0.02 260 / 0.06), 0 1px 4px oklch(0.20 0.02 260 / 0.04);
+  }
+
+  /* ─── Dark Theme ─── */
+  [data-theme="dark"] {
+    --bg-deep:          oklch(0.13 0.008 260);
+    --bg-surface:       oklch(0.17 0.008 260);
+    --bg-surface-hover: oklch(0.21 0.010 260);
+    --bg-elevated:      oklch(0.19 0.008 260);
+    --border-subtle:    oklch(0.26 0.012 260);
+    --border-faint:     oklch(0.22 0.010 260);
+
+    --text-primary:     oklch(0.94 0.008 260);
+    --text-secondary:   oklch(0.72 0.012 260);
+    --text-tertiary:    oklch(0.52 0.008 260);
+
+    --blue-border:   oklch(0.62 0.14 250);
+    --blue-text:     oklch(0.80 0.12 250);
+    --blue-bg:       oklch(0.22 0.04 250);
+    --green-border:  oklch(0.55 0.12 155);
+    --green-text:    oklch(0.80 0.10 155);
+    --green-bg:      oklch(0.20 0.04 155);
+    --gold-border:   oklch(0.68 0.14 70);
+    --gold-text:     oklch(0.82 0.12 70);
+    --gold-bg:       oklch(0.22 0.04 70);
+    --orange-border: oklch(0.68 0.16 45);
+    --orange-text:   oklch(0.82 0.14 45);
+    --orange-bg:     oklch(0.22 0.04 45);
+
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.15), 0 1px 3px oklch(0 0 0 / 0.20);
+    --shadow-md: 0 4px 12px oklch(0 0 0 / 0.20), 0 1px 4px oklch(0 0 0 / 0.15);
   }
 
   html { height: 100%; }
 
   body {
     font-family: "Source Sans 3", system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--fg);
+    background: var(--bg-deep);
+    color: var(--text-primary);
     min-height: 100%;
     display: flex;
     flex-direction: column;
@@ -40,30 +89,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
-    overflow-x: hidden;
-  }
-
-  /* Subtle dot grid — nods to the Prism-UI graph background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: radial-gradient(oklch(1 0 0 / 6%) 1px, transparent 1px);
-    background-size: 24px 24px;
-    pointer-events: none;
-  }
-
-  /* Centered glow — draws focus to content */
-  body::after {
-    content: '';
-    position: fixed;
-    top: 40%;
-    left: 50%;
-    width: 600px;
-    height: 400px;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(ellipse, oklch(0.25 0.03 250 / 50%) 0%, transparent 70%);
-    pointer-events: none;
   }
 
   .page {
@@ -74,8 +99,48 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2.75rem;
+    gap: 2rem;
   }
+
+  /* ---- Theme toggle ---- */
+  .theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--blue-border);
+    color: var(--text-primary);
+  }
+
+  .theme-toggle svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .theme-toggle .icon-moon { display: block; }
+  .theme-toggle .icon-sun  { display: none; }
+  [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  [data-theme="dark"] .theme-toggle .icon-sun  { display: block; }
 
   /* ---- Header ---- */
   .header {
@@ -83,55 +148,78 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    animation: rise 0.7s ease-out both;
+    gap: 0.75rem;
+    animation: rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    color: var(--text-tertiary);
+  }
+
+  .logo-mark svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
   }
 
   h1 {
     font-size: 1.6rem;
-    font-weight: 600;
-    letter-spacing: -0.025em;
+    font-weight: 300;
+    letter-spacing: 0.04em;
     line-height: 1.2;
+    color: var(--text-primary);
   }
 
-  /* ---- Install ---- */
+  h1 strong {
+    font-weight: 600;
+  }
+
+
+  /* ---- Install section ---- */
   .install {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.6rem;
-    animation: rise 0.7s ease-out 0.1s both;
+    gap: 0;
+    animation: rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both;
   }
 
   .install-label {
-    font-size: 0.7rem;
-    font-weight: 500;
+    font-size: 0.65rem;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--fg-dim);
-    padding-left: 0.125rem;
+    color: var(--orange-text);
+    padding: 10px 16px;
+    border-left: 3px solid var(--orange-border);
+    background: var(--orange-bg);
+    border-radius: var(--radius) var(--radius) 0 0;
   }
 
   .install-card {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.875rem 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 14px 16px;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    transition: border-color 0.25s ease;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .install-card:hover {
-    border-color: var(--border-hover);
+    box-shadow: var(--shadow-md);
   }
 
   .install-card code {
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-size: 0.78rem;
-    color: var(--fg);
+    color: var(--text-primary);
     line-height: 1.6;
     white-space: nowrap;
     overflow-x: auto;
@@ -148,30 +236,31 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: calc(var(--radius) - 2px);
-    color: var(--fg-muted);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
     font-family: inherit;
-    font-size: 0.78rem;
-    font-weight: 500;
-    padding: 0.35rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 10px;
     cursor: pointer;
-    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
     line-height: 1;
   }
 
   .copy-btn:hover {
-    color: var(--fg);
-    border-color: var(--border-hover);
-    background: oklch(1 0 0 / 5%);
+    color: var(--text-primary);
+    border-color: var(--blue-border);
+    background: var(--bg-surface-hover);
   }
 
   .copy-btn:active { transform: scale(0.97); }
 
   .copy-btn.is-copied {
-    color: var(--accent-green);
-    border-color: oklch(0.6 0.12 155 / 25%);
+    color: var(--green-text);
+    border-color: var(--green-border);
+    background: var(--green-bg);
   }
 
   .copy-btn svg {
@@ -188,46 +277,55 @@
   .tools {
     display: flex;
     gap: 0.5rem;
-    animation: rise 0.7s ease-out 0.2s both;
+    animation: rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.16s both;
   }
 
   .tool {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.55rem 0.9rem;
+    padding: 8px 14px;
     border-radius: var(--radius);
-    border: 1px solid transparent;
-    transition: border-color 0.25s, background 0.25s;
+    border: 1px solid var(--border-faint);
+    border-left: 3px solid var(--border-subtle);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
     cursor: default;
   }
 
   .tool:hover {
-    border-color: var(--border);
-    background: oklch(1 0 0 / 3%);
+    box-shadow: var(--shadow-md);
   }
 
-  .tool-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    flex-shrink: 0;
+  .tool.blue {
+    border-left-color: var(--blue-border);
+    background: var(--blue-bg);
   }
+  .tool.blue .tool-name { color: var(--blue-text); }
 
-  .tool-dot.blue  { background: var(--accent-blue);  }
-  .tool-dot.green { background: var(--accent-green); }
-  .tool-dot.amber { background: var(--accent-amber); }
+  .tool.green {
+    border-left-color: var(--green-border);
+    background: var(--green-bg);
+  }
+  .tool.green .tool-name { color: var(--green-text); }
+
+  .tool.amber {
+    border-left-color: var(--gold-border);
+    background: var(--gold-bg);
+  }
+  .tool.amber .tool-name { color: var(--gold-text); }
 
   .tool-name {
     font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: var(--fg);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
   /* ---- Animation ---- */
   @keyframes rise {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
@@ -235,22 +333,32 @@
   @media (max-width: 540px) {
     body { padding: 2.5rem 1.25rem; }
 
-    h1 { font-size: 1.35rem; }
+    h1 { font-size: 1.4rem; }
 
-    .tools { flex-direction: column; gap: 0.25rem; width: 100%; }
+    .tools { flex-direction: column; gap: 0.35rem; width: 100%; }
     .tool { width: 100%; }
 
     .install-card code { font-size: 0.7rem; }
-
-    body::after { width: 360px; height: 280px; }
   }
 </style>
 </head>
 <body>
+
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+
 <div class="page">
 
   <header class="header">
-    <h1>Lightcone Research</h1>
+    <div class="logo-mark">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 16 L6 4 L26 4 Z" opacity="0.7"/>
+        <path d="M16 16 L6 28 L26 28 Z" opacity="0.35"/>
+      </svg>
+    </div>
+    <h1><strong>Lightcone</strong> Research</h1>
   </header>
 
   <section class="install">
@@ -265,16 +373,13 @@
   </section>
 
   <nav class="tools">
-    <div class="tool">
-      <span class="tool-dot blue"></span>
+    <div class="tool blue">
       <span class="tool-name">ASTRA</span>
     </div>
-    <div class="tool">
-      <span class="tool-dot green"></span>
+    <div class="tool green">
       <span class="tool-name">Prism-UI</span>
     </div>
-    <div class="tool">
-      <span class="tool-dot amber"></span>
+    <div class="tool amber">
       <span class="tool-name">Prism</span>
     </div>
   </nav>
@@ -296,6 +401,25 @@ function copyCmd() {
     }, 2000);
   });
 }
+
+function toggleTheme() {
+  var html = document.documentElement;
+  var isDark = html.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    html.removeAttribute('data-theme');
+    localStorage.removeItem('theme');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }
+}
+
+// Restore saved theme
+(function () {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
 </script>
 </body>
 </html>
