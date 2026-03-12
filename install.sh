@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Lightcone Research installer
-# Usage: bash <(curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh)
+# Usage: curl -fsSL https://lightconeresearch.github.io/lightcone.dev/install.sh | bash
 #   or:  bash install.sh [--ssh]
 
 DEFAULT_DIR="$HOME/.lightcone"
